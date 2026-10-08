@@ -1,5 +1,15 @@
 import { Component, ElementRef, effect, input, viewChild } from '@angular/core';
-import { Chart, type ChartConfiguration, type Plugin } from 'chart.js';
+import {
+  CategoryScale,
+  Chart,
+  Filler,
+  LinearScale,
+  LineController,
+  LineElement,
+  PointElement,
+  type ChartConfiguration,
+  type Plugin,
+} from 'chart.js';
 import ChartAnnotation from 'chartjs-plugin-annotation';
 import { DensityPoint } from './models';
 
@@ -9,7 +19,15 @@ function ensureCharts(): void {
   if (chartsReady) {
     return;
   }
-  Chart.register(ChartAnnotation as Plugin);
+  Chart.register(
+    LineController,
+    LineElement,
+    PointElement,
+    LinearScale,
+    CategoryScale,
+    Filler,
+    ChartAnnotation as Plugin,
+  );
   chartsReady = true;
 }
 
@@ -240,10 +258,11 @@ function drawIn(axis: 'x' | 'y'): Record<string, object> {
           return undefined;
         }
         const scale = ctx.chart.scales[axis];
-        if (!scale) {
+        const min = scale?.min;
+        if (!scale || typeof min !== 'number' || !Number.isFinite(min)) {
           return undefined;
         }
-        return scale.getPixelForValue(scale.min);
+        return scale.getPixelForValue(min);
       },
     },
   };
