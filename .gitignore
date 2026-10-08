@@ -12,5 +12,7 @@ TestResults/
 client/node_modules/
 client/dist/
 client/.angular/
+client/test-results/
+client/playwright-report/
 *.user
 .DS_Store

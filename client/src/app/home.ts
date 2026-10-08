@@ -501,8 +501,8 @@ export class Home {
       return 'Enter a ticker such as SPY or AAPL.';
     }
     const percent = this.percent();
-    if (!Number.isFinite(percent) || percent <= 0) {
-      return 'Enter a percent move greater than 0.';
+    if (!Number.isFinite(percent) || percent < 0.1) {
+      return 'Enter a move of at least 0.1 percent.';
     }
     if ((this.direction() === 'down' || this.direction() === 'either') && percent > 90) {
       return 'For down or either, use a move of 90 percent or less.';
@@ -516,8 +516,8 @@ export class Home {
     const override = this.volOverride().trim();
     if (override) {
       const value = Number(override);
-      if (!Number.isFinite(value) || value <= 0 || value > 400) {
-        return 'Volatility override must be greater than 0 and at most 400.';
+      if (!Number.isFinite(value) || value < 0.5 || value > 400) {
+        return 'Volatility override must be at least 0.5 and at most 400.';
       }
     }
     return '';

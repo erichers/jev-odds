@@ -36,3 +36,6 @@ jobs:
       - name: Build
         working-directory: client
         run: npm run build
+      - name: Default form submits
+        working-directory: client
+        run: npx playwright install chromium && npm run test:form

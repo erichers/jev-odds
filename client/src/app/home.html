@@ -3,7 +3,7 @@
       <h1>The odds.</h1>
       <p class="lede">A ticker, a percent, and a date.</p>
 
-      <form (submit)="$event.preventDefault(); submit()">
+      <form novalidate (submit)="$event.preventDefault(); submit()">
         <div class="field ticker-field">
           <label for="ticker">Ticker</label>
           <input
@@ -74,7 +74,7 @@
         <div class="field">
           <label for="percent">Move</label>
           <div class="suffix">
-            <input id="percent" class="mono" type="number" min="0.1" max="400" step="0.5" [value]="percent()" (input)="onPercent($any($event.target).value)" />
+            <input id="percent" class="mono" type="number" min="0.1" max="400" step="any" [value]="percent()" (input)="onPercent($any($event.target).value)" [attr.aria-invalid]="error() && !result() ? true : null" [attr.aria-describedby]="error() && !result() ? 'form-error' : null" />
             <span aria-hidden="true">%</span>
           </div>
         </div>
@@ -127,7 +127,7 @@
         <div class="field">
           <label for="override">Volatility override <span class="optional">optional</span></label>
           <div class="suffix">
-            <input id="override" class="mono" type="number" min="0.5" max="400" step="0.1" placeholder="Annualized percent" [value]="volOverride()" (input)="onOverride($any($event.target).value)" />
+            <input id="override" class="mono" type="number" min="0.5" max="400" step="any" placeholder="Annualized percent" [value]="volOverride()" (input)="onOverride($any($event.target).value)" />
             <span aria-hidden="true">%</span>
           </div>
         </div>
@@ -148,6 +148,9 @@
         <button class="go" type="submit" [disabled]="loading()">
           {{ loading() ? 'Calculating' : 'Calculate odds' }}
         </button>
+        @if (error() && !result()) {
+          <p class="error" id="form-error" role="alert">{{ error() }}</p>
+        }
       </form>
     </section>
 
@@ -257,9 +260,6 @@
               <button type="button" (click)="applyPreset(preset)">{{ preset.label }}</button>
             }
           </div>
-          @if (error()) {
-            <p class="error" role="alert">{{ error() }}</p>
-          }
         </div>
       }
 
