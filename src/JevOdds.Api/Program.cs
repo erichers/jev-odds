@@ -4,6 +4,7 @@ using JevOdds.Api.Pricing;
 using JevOdds.Api.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using QuestPDF.Infrastructure;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -30,6 +31,26 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+var resolvedMySql = app.Configuration["Database:ResolvedServerVersion"];
+if (!string.IsNullOrWhiteSpace(resolvedMySql))
+{
+    app.Logger.LogInformation("MySQL compatibility version {Version}", resolvedMySql);
+}
+var pathBase = app.Configuration["Odds:PathBase"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    var prefix = pathBase.Trim();
+    if (!prefix.StartsWith('/'))
+    {
+        prefix = "/" + prefix;
+    }
+
+    prefix = prefix.TrimEnd('/');
+    if (prefix.Length > 0)
+    {
+        app.UsePathBase(prefix);
+    }
+}
 
 using (var scope = app.Services.CreateScope())
 {
@@ -120,11 +141,12 @@ app.MapGet("/api/odds/pdf", async (
     string? drift,
     OddsService odds,
     PdfReportService pdf,
+    IOptions<OddsOptions> options,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await odds.CalculateAsync(new OddsRequest
+        var request = new OddsRequest
         {
             Ticker = ticker,
             Percent = percent,
@@ -133,8 +155,10 @@ app.MapGet("/api/odds/pdf", async (
             VolWindow = string.IsNullOrWhiteSpace(volWindow) ? "60" : volWindow,
             VolOverridePercent = volOverridePercent,
             Drift = string.IsNullOrWhiteSpace(drift) ? "zero" : drift
-        }, cancellationToken);
-        var bytes = pdf.Build(result);
+        };
+        var result = await odds.CalculateAsync(request, cancellationToken);
+        var link = PublicLinks.ResultPage(options.Value.PublicBaseUrl, request, result.Ticker);
+        var bytes = pdf.Build(result, link);
         var fileName = $"jev-odds-{result.Ticker}-{result.TargetDate}.pdf";
         return Results.File(bytes, "application/pdf", fileName);
     }
@@ -153,7 +177,9 @@ static void AddOddsDatabase(WebApplicationBuilder builder)
     var connection = builder.Configuration.GetConnectionString("Odds") ?? "Data Source=data/jev-odds.db";
     if (provider.Equals("MySql", StringComparison.OrdinalIgnoreCase))
     {
-        var version = new MySqlServerVersion(new Version(8, 0, 36));
+        connection = MySqlVersionResolver.WithUtf8Mb4(connection);
+        var version = MySqlVersionResolver.Resolve(connection, builder.Configuration["Database:ServerVersion"]);
+        builder.Configuration["Database:ResolvedServerVersion"] = version.ToString();
         builder.Services.AddDbContext<MySqlOddsDbContext>(options => options.UseMySql(connection, version));
         builder.Services.AddScoped<OddsDbContext>(services => services.GetRequiredService<MySqlOddsDbContext>());
         return;

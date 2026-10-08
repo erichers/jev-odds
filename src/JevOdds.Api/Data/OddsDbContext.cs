@@ -117,4 +117,11 @@ public sealed class MySqlOddsDbContext : OddsDbContext
     public MySqlOddsDbContext(DbContextOptions<MySqlOddsDbContext> options) : base(options)
     {
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.HasCharSet("utf8mb4");
+        modelBuilder.UseCollation("utf8mb4_unicode_ci");
+    }
 }

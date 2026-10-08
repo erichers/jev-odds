@@ -7,24 +7,28 @@ export class ApiService {
   private readonly http = inject(HttpClient);
 
   tickers(query: string) {
-    return this.http.get<TickerInfo[]>('/api/tickers', { params: { q: query } });
+    return this.http.get<TickerInfo[]>(api('api/tickers'), { params: { q: query } });
   }
 
   market(ticker: string) {
-    return this.http.get<MarketSnapshot>(`/api/market/${encodeURIComponent(ticker)}`);
+    return this.http.get<MarketSnapshot>(api(`api/market/${encodeURIComponent(ticker)}`));
   }
 
   calendar(from: string, to: string) {
-    return this.http.get<CalendarResponse>('/api/calendar', { params: { from, to } });
+    return this.http.get<CalendarResponse>(api('api/calendar'), { params: { from, to } });
   }
 
   odds(body: OddsRequest) {
-    return this.http.post<OddsResponse>('/api/odds', body);
+    return this.http.post<OddsResponse>(api('api/odds'), body);
   }
 
   history(limit = 8) {
-    return this.http.get<HistoryItem[]>('/api/history', { params: { limit } });
+    return this.http.get<HistoryItem[]>(api('api/history'), { params: { limit } });
   }
+}
+
+export function api(path: string): string {
+  return new URL(path, document.baseURI).toString();
 }
 
 export function errorMessage(error: unknown): string {

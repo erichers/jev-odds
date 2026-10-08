@@ -188,25 +188,15 @@ npm install
 npm start
 ```
 
-The dev server listens on http://localhost:4200 and proxies `/api` to the API.
-
-### MAMP MySQL
-
-MAMP's MySQL listens on `127.0.0.1` port `8889`. The usual example account is `root` / `root`. Those values live only in `appsettings.MySql.example.json` and `.env.example`.
-
-1. Start MySQL in MAMP.
-2. Create the database: `CREATE DATABASE jev_odds CHARACTER SET utf8mb4;`
-3. Copy `src/JevOdds.Api/appsettings.MySql.example.json` over `src/JevOdds.Api/appsettings.Development.json` (that file is gitignored), or export the variables from `.env.example`.
-4. `dotnet run` from `src/JevOdds.Api`.
-
-On startup the API applies the MySQL migrations and seeds any missing sample tickers. Query history and cached bars share that database. To go back to zero config, set `Database:Provider` to `Sqlite` or delete the Development settings file.
+The dev server listens on http://localhost:4200 and proxies `/api` to the API. The UI calls `api/...` and resolves that against the page `<base href>`, so the same build works at the site root and under a sub-path.
 
 ## Environment variables
 
 | Variable | Default | Role |
 | --- | --- | --- |
 | `Database__Provider` | `Sqlite` | `Sqlite` or `MySql` |
-| `ConnectionStrings__Odds` | `Data Source=data/jev-odds.db` | SQLite path or MySQL connection string |
+| `Database__ServerVersion` | empty, which means auto-detect | MySQL only. Example: `5.7.39-mysql`. If detection cannot connect, the API assumes 5.7.39. |
+| `ConnectionStrings__Odds` | `Data Source=data/jev-odds.db` | SQLite path or MySQL connection string. MySQL strings should include `CharSet=utf8mb4`. The API adds that charset when it is missing. |
 | `DATABASE_PROVIDER` | `Sqlite` | Compose alias mapped onto `Database__Provider` |
 | `ODDS_CONNECTION` | `Data Source=/data/jev-odds.db` | Compose alias mapped onto `ConnectionStrings__Odds` |
 | `Odds__CacheHours` | `12` | How long a live fetch counts as fresh |
@@ -214,6 +204,8 @@ On startup the API applies the MySQL migrations and seeds any missing sample tic
 | `Odds__StooqBaseUrl` | Stooq host | No key |
 | `Odds__MonteCarloPaths` | `20000` | Clamped from 1,000 to 50,000 |
 | `Odds__MonteCarloSeed` | `184208` | Seed for the cross-check |
+| `Odds__PublicBaseUrl` | empty | External origin and path used in links the API writes, such as the result URL in the PDF. Example: `http://localhost:8888/grokbot/asp/jev-odds` |
+| `Odds__PathBase` | empty | Set this only when the reverse proxy forwards the sub-path to Kestrel. Example: `/grokbot/asp/jev-odds` |
 | `ASPNETCORE_ENVIRONMENT` | `Production` in Docker | `Development` enables the Angular dev CORS policy |
 | `ASPNETCORE_URLS` | `http://localhost:5080` in the launch profile | Listen address |
 | `MYSQL_DATABASE` | `jev_odds` | Compose MySQL profile only |
@@ -224,13 +216,49 @@ On startup the API applies the MySQL migrations and seeds any missing sample tic
 
 Copy `.env.example` to `.env` if you want a local reminder. The API does not load `.env` by itself. `docker compose up` works with the defaults and does not need a `.env` file.
 
+## Deploy under MAMP
+
+This is the layout Eric runs: Apache on port 8888 serves the UI at `http://localhost:8888/grokbot/asp/jev-odds/`, and that same prefix proxies API calls to Kestrel. MAMP's MySQL is 5.7.39 on `127.0.0.1` port `8889`. The example account is `root` / `root`, and it belongs only in `appsettings.MySql.example.json` and `.env.example`.
+
+1. Start Apache and MySQL in MAMP.
+2. Create the database with a 5.7 charset. `utf8mb4_0900_ai_ci` is MySQL 8 only. Use:
+
+```
+CREATE DATABASE jev_odds CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+3. Copy `src/JevOdds.Api/appsettings.MySql.example.json` over `src/JevOdds.Api/appsettings.Development.json` (gitignored), or export the matching variables from `.env.example`. Leave `Database:ServerVersion` empty so startup calls `ServerVersion.AutoDetect`. Set it to `5.7.39-mysql` if you want to skip the probe. The example connection string sets `SslMode=None` because a .NET 8 process often cannot complete a TLS handshake with MySQL 5.7 on localhost. Leave `Odds:PathBase` empty when Apache strips the prefix and forwards `/api/...` to Kestrel. Set `Odds:PublicBaseUrl` to `http://localhost:8888/grokbot/asp/jev-odds` so the PDF result link points at the public site.
+4. From `src/JevOdds.Api`, run `dotnet run`. It listens on http://localhost:5080, applies the MySQL migrations, and seeds any missing sample tickers. Cached bars and query history share `jev_odds`.
+5. Build the UI for the sub-path:
+
+```
+cd client
+npm install
+npx ng build --base-href /grokbot/asp/jev-odds/
+```
+
+6. Copy `client/dist/client/browser/` into the Apache document folder so the files live at `htdocs/grokbot/asp/jev-odds/`. The build includes `.htaccess`, which sends unknown paths back to `index.html` and leaves `api/` alone.
+7. Proxy the API from that prefix. In the Apache config:
+
+```
+ProxyPreserveHost On
+ProxyPass /grokbot/asp/jev-odds/api http://127.0.0.1:5080/api
+ProxyPassReverse /grokbot/asp/jev-odds/api http://127.0.0.1:5080/api
+```
+
+The browser then loads `http://localhost:8888/grokbot/asp/jev-odds/`, the router stays under that base, and calls such as `api/odds` and `api/odds/pdf` land on the proxy. Copy link uses the same base, so a shared URL keeps the `/grokbot/asp/jev-odds/` prefix.
+
+If you instead proxy the whole prefix to Kestrel and let Kestrel serve `wwwroot`, set `Odds__PathBase=/grokbot/asp/jev-odds` and copy the built files into `wwwroot`. Do that only when the incoming request path still contains the prefix.
+
+To go back to zero config, set `Database:Provider` to `Sqlite` or delete the Development settings file.
+
 ## Tests
 
 ```
 dotnet test jev-odds.sln
 ```
 
-The suite checks the normal CDF, volatility windows, the blend, empirical frequencies, the NYSE calendar (including 2026 holidays), agreement between the analytic probabilities and Monte Carlo within 0.02, touch at least as large as close, the fifteen sample files, and a SQLite migration that stores a query.
+The suite checks the normal CDF, volatility windows, the blend, empirical frequencies, the NYSE calendar (including 2026 holidays), agreement between the analytic probabilities and Monte Carlo within 0.02, touch at least as large as close, the fifteen sample files, a SQLite migration that stores a query, public result links, and the MySQL 5.7 version fallback.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs those tests and builds the Angular app.
 

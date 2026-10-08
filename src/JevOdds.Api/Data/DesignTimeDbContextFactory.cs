@@ -18,10 +18,11 @@ public sealed class MySqlOddsDbContextFactory : IDesignTimeDbContextFactory<MySq
 {
     public MySqlOddsDbContext CreateDbContext(string[] args)
     {
+        var connection = MySqlVersionResolver.WithUtf8Mb4(
+            "Server=127.0.0.1;Port=1;Database=jev_odds;User=jev;Password=example;Connection Timeout=1;");
+        var version = MySqlVersionResolver.Resolve(connection, Environment.GetEnvironmentVariable("Database__ServerVersion"));
         var options = new DbContextOptionsBuilder<MySqlOddsDbContext>()
-            .UseMySql(
-                "Server=127.0.0.1;Port=3306;Database=jev_odds;User=jev;Password=example;",
-                new MySqlServerVersion(new Version(8, 0, 36)))
+            .UseMySql(connection, version)
             .Options;
         return new MySqlOddsDbContext(options);
     }

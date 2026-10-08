@@ -4,6 +4,7 @@ using JevOdds.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JevOdds.Api.Data.Migrations.MySql
 {
     [DbContext(typeof(MySqlOddsDbContext))]
-    partial class MySqlOddsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008022259_Utf8mb4")]
+    partial class Utf8mb4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

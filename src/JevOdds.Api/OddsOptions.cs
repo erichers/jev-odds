@@ -13,4 +13,8 @@ public sealed class OddsOptions
     public int MonteCarloPaths { get; set; } = 20_000;
 
     public int MonteCarloSeed { get; set; } = 184208;
+
+    public string PublicBaseUrl { get; set; } = "";
+
+    public string PathBase { get; set; } = "";
 }

@@ -12,7 +12,7 @@ public sealed class PdfReportService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public byte[] Build(OddsResponse odds)
+    public byte[] Build(OddsResponse odds, string? resultUrl = null)
     {
         var direction = odds.Direction switch
         {
@@ -55,6 +55,11 @@ public sealed class PdfReportService
                 });
                 page.Footer().Column(column =>
                 {
+                    if (!string.IsNullOrWhiteSpace(resultUrl))
+                    {
+                        column.Item().Text(resultUrl).FontSize(8).FontColor(Colors.Grey.Darken2);
+                    }
+
                     column.Item().Text("Educational tool. Not financial advice.").SemiBold();
                     column.Item().Text("by Ulric studio").FontSize(9).FontColor(Colors.Grey.Darken2);
                 });

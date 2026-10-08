@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { ApiService, errorMessage } from './api.service';
+import { ApiService, api, errorMessage } from './api.service';
 import { DensityChart, PathsChart } from './charts';
 import { CalendarResponse, Direction, Drift, MarketSnapshot, OddsRequest, OddsResponse, TickerInfo, VolWindow } from './models';
 import { ThemeService } from './theme.service';
@@ -173,7 +173,8 @@ export class Home {
 
   async copyLink(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const path = this.router.url.replace(/^\//, '');
+      await navigator.clipboard.writeText(new URL(path, document.baseURI).toString());
       this.copied.set(true);
       window.setTimeout(() => this.copied.set(false), 1600);
     } catch {
@@ -198,7 +199,7 @@ export class Home {
       params.set('volOverridePercent', String(request.volOverridePercent));
     }
     const anchor = document.createElement('a');
-    anchor.href = `/api/odds/pdf?${params.toString()}`;
+    anchor.href = api(`api/odds/pdf?${params.toString()}`);
     anchor.rel = 'noopener';
     document.body.appendChild(anchor);
     anchor.click();
