@@ -1,0 +1,49 @@
+<section class="hero">
+  <p class="eyebrow">A research instrument</p>
+  <h1>What are the odds <em>it gets there?</em></h1>
+  <p class="lede">
+    One ticker, one percent, one date. Jev estimates the chance of closing beyond that move, and the chance of touching it on the way.
+  </p>
+  <a class="go link" routerLink="/odds">Open the odds</a>
+</section>
+
+<section class="questions" aria-labelledby="questions-title">
+  <div class="section-head">
+    <h2 id="questions-title">Questions with a real series behind them</h2>
+    <p>Each one opens the odds for that ticker, move, and date. Sample history is already on the server.</p>
+  </div>
+  <div class="q-list">
+    @for (example of examples; track example.question) {
+      <a class="q" [routerLink]="['/odds']" [queryParams]="params(example)">
+        <span class="q-kicker">{{ example.ticker }}</span>
+        <span class="q-text">{{ example.question }}</span>
+        <span class="q-go">See the odds</span>
+      </a>
+    }
+  </div>
+  <p class="quiet sample-note">
+    Shipped daily closes: SPY, QQQ, IWM, AAPL, MSFT, NVDA, TSLA, AMZN, GOOGL, META, AMD, AVGO, NFLX, JPM, COST.
+  </p>
+</section>
+
+@if (history().length) {
+  <section class="questions recent" aria-labelledby="recent-title">
+    <div class="section-head">
+      <h2 id="recent-title">Asked on this machine</h2>
+      <p>Stored with the price cache. Open one to run it again.</p>
+    </div>
+    <div class="q-list">
+      @for (item of history(); track item.id) {
+        <a
+          class="q"
+          [routerLink]="['/odds']"
+          [queryParams]="{ ticker: item.ticker, percent: item.percent, direction: item.direction, date: item.targetDate, vol: item.volWindow, drift: item.drift }"
+        >
+          <span class="q-kicker">{{ item.ticker }}</span>
+          <span class="q-text">{{ phrase(item) }}</span>
+          <span class="q-go">{{ (item.analyticClose * 100).toFixed(1) }}% close</span>
+        </a>
+      }
+    </div>
+  </section>
+}

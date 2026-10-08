@@ -1,0 +1,16 @@
+bin/
+obj/
+wwwroot/
+data/
+*.db
+*.db-*
+.env
+appsettings.Development.json
+TestResults/
+.vs/
+.idea/
+client/node_modules/
+client/dist/
+client/.angular/
+*.user
+.DS_Store

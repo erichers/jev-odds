@@ -1,0 +1,73 @@
+<article class="method">
+  <p class="eyebrow">Methodology</p>
+  <h1>How a percent becomes a probability.</h1>
+  <p class="lede">
+    Jev treats the future price as a lognormal random walk. The numbers on the odds page are that model, checked against a seeded simulation and against the ticker's own past.
+  </p>
+  <p class="advice">Educational tool. Not financial advice.</p>
+
+  <h2>The price model</h2>
+  <p>
+    The spot S is the latest daily close. Time T is the number of NYSE sessions from that close through the target date, divided by 252. Volatility sigma is an annualized standard deviation of daily log returns. Drift mu is either zero or a historical mean.
+  </p>
+  <pre class="formula">dS / S = mu dt + sigma dW
+nu = mu - sigma^2 / 2
+T = trading days / 252</pre>
+  <p>
+    nu is the drift of the log price. With zero drift, mu is 0, so nu is negative half of sigma squared. With historical drift, mu is the annualized mean log return over the longest full window (252, else 60, else 20) plus half of sigma squared. That choice makes the model's expected log return match the historical mean.
+  </p>
+
+  <h2>Close beyond</h2>
+  <p>
+    Close beyond is the probability that the price on the target session is at or past the target. For an up move of p percent, the target K is S times (1 + p/100). For a down move, K is S times (1 - p/100). N is the standard normal CDF.
+  </p>
+  <pre class="formula">Up:   N( (ln(S / K) + nu T) / (sigma sqrt(T)) )
+Down: N( (ln(K / S) - nu T) / (sigma sqrt(T)) )</pre>
+  <p>At the target counts. A finish exactly on K is a hit.</p>
+
+  <h2>Touch</h2>
+  <p>
+    Touch is the probability that the price reaches the target at any moment before the date, including the close. The formula is the reflection principle for a Brownian motion with drift. For an up barrier, a is ln(K / S).
+  </p>
+  <pre class="formula">N( (-a + nu T) / (sigma sqrt(T)) )
+  + exp(2 nu a / sigma^2) N( (-a - nu T) / (sigma sqrt(T)) )</pre>
+  <p>
+    The down barrier uses the matching lower-barrier formula. When nu is 0, touch is exactly twice the close-beyond probability. Touch is never smaller than close beyond, because finishing beyond the target means the path touched it.
+  </p>
+
+  <h2>Either direction</h2>
+  <p>
+    Either means the move can be up or down by the same percent. The two close-beyond tails do not overlap, so the close probability is their sum.
+  </p>
+  <p>
+    Either touch is one minus the chance of staying between the two barriers the whole time. That survival probability is a Fourier sine series for Brownian motion with drift. If the series is not finite, or it falls outside a tight bound around the one-sided answers, Jev uses a 500-step recombining binomial tree instead.
+  </p>
+
+  <h2>Volatility</h2>
+  <p>
+    Realized volatility is the sample standard deviation of the last N daily log returns, multiplied by the square root of 252. The windows are 20, 60, and 252 sessions. A window is used only when that many returns exist. Blend is the equal average of the windows that qualify. An override replaces sigma with the annualized percent you type.
+  </p>
+
+  <h2>Monte Carlo</h2>
+  <p>
+    The cross-check draws geometric Brownian motion paths with a fixed seed (184208 by default) and 20,000 paths. Each step also applies a Brownian bridge, so a barrier crossed between two samples still counts. A path that finishes beyond the target is always a touch. The odds page shows eight of those paths.
+  </p>
+
+  <h2>What actually happened</h2>
+  <p>
+    The historical line is not the model. It is the fraction of past windows of the same length whose close finished at or past the move, and the fraction whose daily closes touched it. Only daily closes are in the file, so a touch that happened intraday and reversed before the close is invisible to this count.
+  </p>
+
+  <h2>Trading days</h2>
+  <p>
+    Sessions are weekdays that are not full-day NYSE closures. The holiday set includes New Year's Day, Martin Luther King Jr. Day, Presidents Day, Good Friday, Memorial Day, Juneteenth, Independence Day, Labor Day, Thanksgiving, and Christmas, with the usual Saturday-to-Friday and Sunday-to-Monday observation. Early closes still count as sessions. The count excludes the as-of date and includes the target session. If the target is not a session, the effective date is the previous session.
+  </p>
+
+  <h2>Where the prices come from</h2>
+  <p>
+    The API asks Yahoo Finance for five years of daily adjusted closes, then Stooq if Yahoo does not answer. A fresh series is cached. If both sources fail, the last cached series is used, including the sample files shipped with the app. The badge on a result says live or cached, and names the source. Fifteen tickers have sample history so the demo and the tests run with the network off.
+  </p>
+  <p>
+    Nothing here is a forecast you should trade. The model ignores jumps, dividends as a separate input, rates, and the fact that realized volatility changes. It is a clear calculation on a stated set of assumptions.
+  </p>
+</article>

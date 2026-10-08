@@ -1,0 +1,266 @@
+<main class="stage" [class.has-result]="result() || loading()">
+    <section class="panel query">
+      <h1>Odds of the move.</h1>
+      <p class="lede">A ticker, a percent, and a date. The chance of closing beyond that move, and the chance of touching it on the way.</p>
+
+      <form (submit)="$event.preventDefault(); submit()">
+        <div class="field ticker-field">
+          <label for="ticker">Ticker</label>
+          <input
+            id="ticker"
+            type="text"
+            maxlength="12"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="ticker-list"
+            [attr.aria-expanded]="suggestOpen()"
+            [value]="ticker()"
+            (input)="onTicker($any($event.target).value)"
+            (focus)="suggestOpen.set(true)"
+            (keydown)="onTickerKey($event)"
+            (blur)="onTickerBlur()"
+          />
+          @if (suggestOpen() && (suggestions().length || freeEntry())) {
+            <ul class="suggest" id="ticker-list" role="listbox">
+              @for (item of suggestions(); track item.symbol; let i = $index) {
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    [class.active]="highlight() === i"
+                    [attr.aria-selected]="highlight() === i"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="pick(item.symbol)"
+                  >
+                    <span class="sym">{{ item.symbol }}</span>
+                    <span class="nm">{{ item.name }}</span>
+                    @if (item.seeded) {
+                      <span class="tag">Sample</span>
+                    }
+                  </button>
+                </li>
+              }
+              @if (freeEntry()) {
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    [class.active]="highlight() === suggestions().length"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="pick(freeEntry())"
+                  >
+                    <span class="sym">{{ freeEntry() }}</span>
+                    <span class="nm">Look up this ticker</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        @if (preview(); as snap) {
+          <div class="spotline">
+            <span class="sym">{{ snap.ticker }}</span>
+            <span class="px">{{ money(snap.lastClose) }}</span>
+            <span>As of {{ pretty(snap.asOf) }}</span>
+            <span class="badge" [class.live]="snap.origin === 'live'">{{ originLabel(snap.origin, snap.provider) }}</span>
+          </div>
+        } @else if (previewNote()) {
+          <p class="hint">{{ previewNote() }}</p>
+        }
+
+        <div class="field">
+          <label for="percent">Move</label>
+          <div class="suffix">
+            <input id="percent" class="mono" type="number" min="0.1" max="400" step="0.5" [value]="percent()" (input)="onPercent($any($event.target).value)" />
+            <span aria-hidden="true">%</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span id="dir-label">Direction</span>
+          <div class="seg" role="radiogroup" aria-labelledby="dir-label">
+            <button type="button" role="radio" class="up" [class.on]="direction() === 'up'" [attr.aria-checked]="direction() === 'up'" (click)="setDirection('up')">Up</button>
+            <button type="button" role="radio" class="down" [class.on]="direction() === 'down'" [attr.aria-checked]="direction() === 'down'" (click)="setDirection('down')">Down</button>
+            <button type="button" role="radio" [class.on]="direction() === 'either'" [attr.aria-checked]="direction() === 'either'" (click)="setDirection('either')">Either</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="target">Target date</label>
+          <input id="target" type="date" [value]="targetDate()" (input)="onDate($any($event.target).value)" />
+          @if (calendar(); as cal) {
+            @if (cal.tradingDays > 0) {
+              <p class="hint">{{ cal.tradingDays }} trading days through {{ pretty(cal.effectiveDate || targetDate()) }}.</p>
+            } @else {
+              <p class="hint">No trading sessions between the last close and that date.</p>
+            }
+          } @else {
+            <p class="hint">Trading days are counted from the last close. Weekends and full-day NYSE holidays are skipped.</p>
+          }
+        </div>
+
+        <div class="field">
+          <span id="vol-label">Volatility</span>
+          <div class="seg vols" role="radiogroup" aria-labelledby="vol-label">
+            <button type="button" role="radio" [class.on]="volWindow() === '20'" [attr.aria-checked]="volWindow() === '20'" (click)="setVol('20')">
+              <span>20d</span>
+              @if (preview()?.vol20; as vol) { <small>{{ volPct(vol) }}</small> }
+            </button>
+            <button type="button" role="radio" [class.on]="volWindow() === '60'" [attr.aria-checked]="volWindow() === '60'" (click)="setVol('60')">
+              <span>60d</span>
+              @if (preview()?.vol60; as vol) { <small>{{ volPct(vol) }}</small> }
+            </button>
+            <button type="button" role="radio" [class.on]="volWindow() === '252'" [attr.aria-checked]="volWindow() === '252'" (click)="setVol('252')">
+              <span>252d</span>
+              @if (preview()?.vol252; as vol) { <small>{{ volPct(vol) }}</small> }
+            </button>
+            <button type="button" role="radio" [class.on]="volWindow() === 'blend'" [attr.aria-checked]="volWindow() === 'blend'" (click)="setVol('blend')">
+              <span>Blend</span>
+              @if (preview()?.volBlend; as vol) { <small>{{ volPct(vol) }}</small> }
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="override">Volatility override <span class="optional">optional</span></label>
+          <div class="suffix">
+            <input id="override" class="mono" type="number" min="0.5" max="400" step="0.1" placeholder="Annualized percent" [value]="volOverride()" (input)="onOverride($any($event.target).value)" />
+            <span aria-hidden="true">%</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span id="drift-label">Drift</span>
+          <div class="seg" role="radiogroup" aria-labelledby="drift-label">
+            <button type="button" role="radio" [class.on]="drift() === 'zero'" [attr.aria-checked]="drift() === 'zero'" (click)="setDrift('zero')">
+              <span>Zero</span>
+            </button>
+            <button type="button" role="radio" [class.on]="drift() === 'historical'" [attr.aria-checked]="drift() === 'historical'" (click)="setDrift('historical')">
+              <span>Historical</span>
+              @if (preview()?.logDriftAnnual; as mean) { <small>{{ signedPct(mean) }}</small> }
+            </button>
+          </div>
+        </div>
+
+        <button class="go" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Calculating' : 'Calculate odds' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="panel result" aria-live="polite" [attr.aria-busy]="loading()">
+      @if (loading()) {
+        <div class="skel skel-line"></div>
+        <div class="skel-row">
+          <div class="skel skel-num"></div>
+          <div class="skel skel-num"></div>
+        </div>
+        <div class="skel skel-chart"></div>
+        <div class="skel skel-chart short"></div>
+      } @else if (result(); as r) {
+        <div class="result-body stagger">
+          <div class="result-top">
+            <div>
+              <h2>{{ r.ticker }} {{ phrase(r) }}</h2>
+              <p class="quiet">
+                @if (r.name) { {{ r.name }}. }
+                As of {{ pretty(r.asOf) }}. {{ r.tradingDays }} trading days to {{ pretty(r.effectiveDate) }}.
+              </p>
+            </div>
+            <span class="badge" [class.live]="r.origin === 'live'">{{ originLabel(r.origin, r.provider) }}</span>
+          </div>
+
+          <p class="advice">Educational tool. Not financial advice.</p>
+
+          @if (stale()) {
+            <p class="hint">The form has changed. Calculate to update this readout.</p>
+          }
+
+          <div class="probs">
+            <article class="prob" [class.up]="r.direction === 'up'" [class.down]="r.direction === 'down'" [class.either]="r.direction === 'either'">
+              <div class="prob-head">
+                <p class="eyebrow">Close beyond</p>
+                <p class="eyebrow">Monte Carlo</p>
+              </div>
+              <div class="prob-figures">
+                <p class="prob-value">{{ probText(shownClose()) }}<span class="unit">%</span></p>
+                <p class="mc-value">{{ probText(r.monteCarloClose) }}%</p>
+              </div>
+              <div class="rail" aria-hidden="true"><span [style.width.%]="railWidth(shownClose())"></span></div>
+            </article>
+            <article class="prob" [class.up]="r.direction === 'up'" [class.down]="r.direction === 'down'" [class.either]="r.direction === 'either'">
+              <div class="prob-head">
+                <p class="eyebrow">Touch</p>
+                <p class="eyebrow">Monte Carlo</p>
+              </div>
+              <div class="prob-figures">
+                <p class="prob-value">{{ probText(shownTouch()) }}<span class="unit">%</span></p>
+                <p class="mc-value">{{ probText(r.monteCarloTouch) }}%</p>
+              </div>
+              <div class="rail" aria-hidden="true"><span [style.width.%]="railWidth(shownTouch())"></span></div>
+            </article>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <span class="eyebrow">1 sigma range</span>
+              <b>{{ money(r.expectedLow) }} to {{ money(r.expectedHigh) }}</b>
+            </div>
+            <div class="stat">
+              <span class="eyebrow">Spot</span>
+              <b>{{ money(r.spot) }}</b>
+            </div>
+            <div class="stat">
+              <span class="eyebrow">Historical windows</span>
+              @if (r.empiricalSamples > 0 && r.empiricalClose != null && r.empiricalTouch != null) {
+                <b>Close {{ probText(r.empiricalClose) }}%, touch {{ probText(r.empiricalTouch) }}%</b>
+                <small>{{ r.empiricalSamples }} past windows of {{ r.tradingDays }} sessions</small>
+              } @else {
+                <b>Not enough history</b>
+              }
+            </div>
+          </div>
+
+          <figure>
+            <figcaption>Terminal price distribution. Shaded area is at or past the target. Dashed line is the spot.</figcaption>
+            <app-density-chart [points]="r.density" [upper]="r.upper" [lower]="r.lower" [spot]="r.spot" [theme]="theme.mode()" />
+          </figure>
+          <figure>
+            <figcaption>A sample of Monte Carlo paths. Horizontal lines are the targets.</figcaption>
+            <app-paths-chart [paths]="r.paths" [upper]="r.upper" [lower]="r.lower" [theme]="theme.mode()" />
+          </figure>
+
+          <details class="how">
+            <summary>How this was computed</summary>
+            <pre>{{ r.formula }}</pre>
+          </details>
+
+          <div class="actions">
+            <button type="button" (click)="downloadPdf()">Download PDF</button>
+            <button type="button" (click)="copyLink()">{{ copied() ? 'Copied' : 'Copy link' }}</button>
+          </div>
+        </div>
+      } @else {
+        <div class="empty">
+          <p class="eyebrow">Readout</p>
+          <h2>The readout sits here.</h2>
+          <p>Calculate to see close-beyond and touch, the 1 sigma range, and the terminal distribution.</p>
+          <div class="presets">
+            @for (preset of presets; track preset.label) {
+              <button type="button" (click)="applyPreset(preset)">{{ preset.label }}</button>
+            }
+          </div>
+          @if (error()) {
+            <p class="error" role="alert">{{ error() }}</p>
+          }
+        </div>
+      }
+
+      @if (error() && (result() || loading())) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+    </section>
+</main>

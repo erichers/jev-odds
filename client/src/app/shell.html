@@ -1,0 +1,34 @@
+<div class="app">
+  <header class="top">
+    <a class="brand" routerLink="/" aria-label="Jev Odds home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="1.4" y="1.4" width="29.2" height="29.2" rx="8" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+        <path d="M20.2 8.2v10.4a4.8 4.8 0 0 1-9.6 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+        <circle cx="20.2" cy="8.2" r="1.7" fill="#19c39c"></circle>
+      </svg>
+      <span class="word">Jev</span>
+      <span class="product">Odds</span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a routerLink="/odds" routerLinkActive="on">Odds</a>
+      <a routerLink="/methodology" routerLinkActive="on">Methodology</a>
+      <button
+        type="button"
+        class="ghost"
+        (click)="theme.toggle()"
+        [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+      >
+        {{ theme.mode() === 'dark' ? 'Light' : 'Dark' }}
+      </button>
+    </nav>
+  </header>
+
+  <div class="page">
+    <router-outlet />
+  </div>
+
+  <footer class="site">
+    <span class="credit">by Ulric studio</span>
+    <span class="disclaimer">Educational tool. Not financial advice.</span>
+  </footer>
+</div>
