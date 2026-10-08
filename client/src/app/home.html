@@ -161,7 +161,7 @@
         <div class="skel skel-chart"></div>
         <div class="skel skel-chart short"></div>
       } @else if (result(); as r) {
-        <div class="result-body">
+        <div class="result-body stagger">
           <div class="result-top">
             <div>
               <h2>{{ r.ticker }} {{ phrase(r) }}</h2>
@@ -231,6 +231,10 @@
           <figure>
             <figcaption>A sample of Monte Carlo paths. Horizontal lines are the targets.</figcaption>
             <app-paths-chart [paths]="r.paths" [upper]="r.upper" [lower]="r.lower" [theme]="theme.mode()" />
+          </figure>
+          <figure>
+            <figcaption>The same paths in three dimensions. Drag to orbit. The surface at the end is the terminal distribution.</figcaption>
+            <app-path-field [paths]="r.paths" [density]="r.density" [upper]="r.upper" [lower]="r.lower" [theme]="theme.mode()" />
           </figure>
 
           <details class="how">

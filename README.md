@@ -51,7 +51,17 @@ Phone width is in the same folder: `home-light-phone.png`, `home-dark-phone.png`
 - A label that says whether the result used live or cached data
 - Light and dark mode. The choice is remembered. With no saved choice, the app follows the system theme.
 - Phone and desktop layouts
-- A short fade when a page or result appears. `prefers-reduced-motion` turns the motion off.
+- Motion on entrances, numbers, charts, and a three-dimensional path field. `prefers-reduced-motion` turns it off. See Motion below.
+
+## Motion
+
+Pages and sections fade in and rise about 12 pixels, over roughly a third of a second, with a short stagger between children. Moving from one page to another crossfades. Buttons, the direction control, and the theme control ease with a small spring. Changing theme fades the colors instead of cutting them.
+
+The close and touch numbers count up. Their rules fill from zero once the readout is in view. The distribution line draws across, then the shaded area fills. The sample paths draw left to right.
+
+The methodology page draws one path: the spot, the barrier, the touch, and the close.
+
+Under a result, the same paths sit in a lime field you can drag to orbit. A lit surface at the far end is the terminal distribution. three.js loads only for that view. The pixel ratio is capped at 2, and the scene pauses when it is off screen or the tab is hidden. If WebGL is unavailable, or the system asks for reduced motion, a still drawing of the same paths is shown instead. Reduced motion also makes the other animation instant, with no count-up and no autoplay.
 
 ## Stack
 
@@ -59,6 +69,7 @@ Phone width is in the same folder: `home-light-phone.png`, `home-dark-phone.png`
 - Angular 22, standalone components and signals
 - EF Core with SQLite by default, or MySQL through Pomelo when you select it
 - Chart.js for the distribution and path charts
+- three.js for the orbitable path field, loaded only when a result is on screen
 - QuestPDF (Community license) for the one-page PDF
 - xUnit for the math, the trading calendar, the sample files, and the SQLite migration
 

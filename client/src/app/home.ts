@@ -1,9 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ApiService, api, errorMessage } from './api.service';
 import { DensityChart, PathsChart } from './charts';
+import { PathField } from './path-field';
 import { CalendarResponse, Direction, Drift, MarketSnapshot, OddsRequest, OddsResponse, TickerInfo, VolWindow } from './models';
 import { ThemeService } from './theme.service';
 
@@ -17,7 +18,7 @@ interface Preset {
 
 @Component({
   selector: 'app-home',
-  imports: [DensityChart, PathsChart],
+  imports: [DensityChart, PathsChart, PathField],
   templateUrl: './home.html',
 })
 export class Home {
@@ -79,9 +80,15 @@ export class Home {
   private oddsSub: Subscription | null = null;
   private timer = 0;
   private bootstrapped = false;
+  private frame = 0;
+  private countObserver: IntersectionObserver | null = null;
 
   constructor() {
     this.route.queryParamMap.subscribe((map) => this.onParams(map));
+    inject(DestroyRef).onDestroy(() => {
+      cancelAnimationFrame(this.frame);
+      this.countObserver?.disconnect();
+    });
   }
 
   onTicker(value: string): void {
@@ -399,8 +406,49 @@ export class Home {
   }
 
   private playCount(close: number, touch: number): void {
-    this.shownClose.set(close);
-    this.shownTouch.set(touch);
+    cancelAnimationFrame(this.frame);
+    this.countObserver?.disconnect();
+    this.countObserver = null;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.shownClose.set(close);
+      this.shownTouch.set(touch);
+      return;
+    }
+    this.shownClose.set(0);
+    this.shownTouch.set(0);
+    const begin = () => this.runCount(close, touch);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const block = document.querySelector('.probs');
+        if (!block) {
+          begin();
+          return;
+        }
+        this.countObserver = new IntersectionObserver((entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) {
+            return;
+          }
+          this.countObserver?.disconnect();
+          this.countObserver = null;
+          begin();
+        }, { threshold: 0.25 });
+        this.countObserver.observe(block);
+      });
+    });
+  }
+
+  private runCount(close: number, touch: number): void {
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 640);
+      const eased = unitBezier(t, 0.2, 0.7, 0.2, 1);
+      this.shownClose.set(close * eased);
+      this.shownTouch.set(touch * eased);
+      if (t < 1) {
+        this.frame = requestAnimationFrame(tick);
+      }
+    };
+    this.frame = requestAnimationFrame(tick);
   }
 
   private requestBody(): OddsRequest {
@@ -478,4 +526,31 @@ export class Home {
 
 function trimNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : String(value);
+}
+
+function unitBezier(t: number, p1x: number, p1y: number, p2x: number, p2y: number): number {
+  let s = t;
+  for (let i = 0; i < 6; i += 1) {
+    const x = cubic(s, p1x, p2x) - t;
+    const dx = cubicSlope(s, p1x, p2x);
+    if (Math.abs(dx) < 1e-6) {
+      break;
+    }
+    s = Math.min(1, Math.max(0, s - x / dx));
+  }
+  return cubic(s, p1y, p2y);
+}
+
+function cubic(t: number, p1: number, p2: number): number {
+  const c = 3 * p1;
+  const b = 3 * (p2 - p1) - c;
+  const a = 1 - c - b;
+  return ((a * t + b) * t + c) * t;
+}
+
+function cubicSlope(t: number, p1: number, p2: number): number {
+  const c = 3 * p1;
+  const b = 3 * (p2 - p1) - c;
+  const a = 1 - c - b;
+  return (3 * a * t + 2 * b) * t + c;
 }

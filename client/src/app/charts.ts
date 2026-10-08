@@ -134,7 +134,11 @@ export class DensityChart {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: reduce ? false : { duration: 220, easing: 'easeOutQuad' },
+        animation: reduce ? false : { duration: 400, easing: 'easeOutQuart' },
+        animations: reduce ? undefined : drawAcross({
+          duration: (index) => (index === 0 ? 400 : 320),
+          delay: (index) => (index === 0 ? 0 : 400),
+        }),
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false },
@@ -221,7 +225,15 @@ export class PathsChart {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: reduce ? false : { duration: 220, easing: 'easeOutQuad' },
+        animation: reduce ? false : {
+          duration: 400,
+          easing: 'easeOutQuart',
+          delay: (ctx: DrawContext) => (ctx.type === 'data' ? ctx.datasetIndex * 28 : 0),
+        },
+        animations: reduce ? undefined : drawAcross({
+          duration: () => 400,
+          delay: (index) => index * 28,
+        }),
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false },
@@ -243,6 +255,37 @@ export class PathsChart {
       },
     });
   }
+}
+
+interface DrawContext {
+  type: string;
+  datasetIndex: number;
+  chart: Chart;
+}
+
+function drawAcross(timing: {
+  duration: (index: number) => number;
+  delay: (index: number) => number;
+}): Record<string, object> {
+  return {
+    x: {
+      type: 'number',
+      easing: 'easeOutQuart',
+      duration: (ctx: DrawContext) => (ctx.type === 'data' ? timing.duration(ctx.datasetIndex) : 400),
+      delay: (ctx: DrawContext) => (ctx.type === 'data' ? timing.delay(ctx.datasetIndex) : 0),
+      from: (ctx: DrawContext) => {
+        if (ctx.type !== 'data') {
+          return undefined;
+        }
+        const scale = ctx.chart.scales['x'];
+        const min = scale?.min;
+        if (!scale || typeof min !== 'number' || !Number.isFinite(min)) {
+          return undefined;
+        }
+        return scale.getPixelForValue(min);
+      },
+    },
+  };
 }
 
 function colorAlpha(color: string, alpha: number): string {
