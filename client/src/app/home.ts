@@ -79,7 +79,6 @@ export class Home {
   private oddsSub: Subscription | null = null;
   private timer = 0;
   private bootstrapped = false;
-  private frame = 0;
 
   constructor() {
     this.route.queryParamMap.subscribe((map) => this.onParams(map));
@@ -400,26 +399,8 @@ export class Home {
   }
 
   private playCount(close: number, touch: number): void {
-    cancelAnimationFrame(this.frame);
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) {
-      this.shownClose.set(close);
-      this.shownTouch.set(touch);
-      return;
-    }
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 900);
-      const eased = 1 - (1 - t) ** 3;
-      this.shownClose.set(close * eased);
-      this.shownTouch.set(touch * eased);
-      if (t < 1) {
-        this.frame = requestAnimationFrame(tick);
-      }
-    };
-    this.shownClose.set(0);
-    this.shownTouch.set(0);
-    this.frame = requestAnimationFrame(tick);
+    this.shownClose.set(close);
+    this.shownTouch.set(touch);
   }
 
   private requestBody(): OddsRequest {

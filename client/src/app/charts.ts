@@ -134,8 +134,7 @@ export class DensityChart {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: reduce ? false : { duration: 1100, easing: 'easeOutQuart' },
-        animations: reduce ? undefined : drawIn('x'),
+        animation: reduce ? false : { duration: 220, easing: 'easeOutQuad' },
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false },
@@ -222,8 +221,7 @@ export class PathsChart {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: reduce ? false : { duration: 1100, easing: 'easeOutQuart' },
-        animations: reduce ? undefined : drawIn('y'),
+        animation: reduce ? false : { duration: 220, easing: 'easeOutQuad' },
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false },
@@ -245,27 +243,6 @@ export class PathsChart {
       },
     });
   }
-}
-
-function drawIn(axis: 'x' | 'y'): Record<string, object> {
-  return {
-    [axis]: {
-      type: 'number',
-      easing: 'easeOutQuart',
-      duration: 1100,
-      from: (ctx: { type: string; chart: Chart }) => {
-        if (ctx.type !== 'data') {
-          return undefined;
-        }
-        const scale = ctx.chart.scales[axis];
-        const min = scale?.min;
-        if (!scale || typeof min !== 'number' || !Number.isFinite(min)) {
-          return undefined;
-        }
-        return scale.getPixelForValue(min);
-      },
-    },
-  };
 }
 
 function colorAlpha(color: string, alpha: number): string {

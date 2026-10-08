@@ -1,6 +1,5 @@
 <article class="method">
-  <p class="eyebrow">Methodology</p>
-  <h1>How a percent becomes a probability.</h1>
+  <h1>How a percent becomes a <em>probability.</em></h1>
   <p class="lede">
     Jev treats the future price as a lognormal random walk. The numbers on the odds page are that model, checked against a seeded simulation and against the ticker's own past.
   </p>
@@ -65,7 +64,7 @@ Down: N( (ln(K / S) - nu T) / (sigma sqrt(T)) )</pre>
 
   <h2>Where the prices come from</h2>
   <p>
-    The API asks Yahoo Finance for five years of daily adjusted closes, then Stooq if Yahoo does not answer. A fresh series is cached. If both sources fail, the last cached series is used, including the sample files shipped with the app. The badge on a result says live or cached, and names the source. Fifteen tickers have sample history so the demo and the tests run with the network off.
+    The API asks Yahoo Finance for five years of daily adjusted closes, then Stooq if Yahoo does not answer. A fresh series is cached. If both sources fail, the last cached series is used, including the sample files shipped with the app. The label on a result says live or cached, and names the source. Fifteen tickers have sample history so the demo and the tests run with the network off.
   </p>
   <p>
     Nothing here is a forecast you should trade. The model ignores jumps, dividends as a separate input, rates, and the fact that realized volatility changes. It is a clear calculation on a stated set of assumptions.

@@ -1,7 +1,7 @@
 <main class="stage" [class.has-result]="result() || loading()">
     <section class="panel query">
-      <h1>Odds of the move.</h1>
-      <p class="lede">A ticker, a percent, and a date. The chance of closing beyond that move, and the chance of touching it on the way.</p>
+      <h1>The odds.</h1>
+      <p class="lede">A ticker, a percent, and a date.</p>
 
       <form (submit)="$event.preventDefault(); submit()">
         <div class="field ticker-field">
@@ -65,7 +65,7 @@
             <span class="sym">{{ snap.ticker }}</span>
             <span class="px">{{ money(snap.lastClose) }}</span>
             <span>As of {{ pretty(snap.asOf) }}</span>
-            <span class="badge" [class.live]="snap.origin === 'live'">{{ originLabel(snap.origin, snap.provider) }}</span>
+            <span class="origin" [class.live]="snap.origin === 'live'">{{ originLabel(snap.origin, snap.provider) }}</span>
           </div>
         } @else if (previewNote()) {
           <p class="hint">{{ previewNote() }}</p>
@@ -161,7 +161,7 @@
         <div class="skel skel-chart"></div>
         <div class="skel skel-chart short"></div>
       } @else if (result(); as r) {
-        <div class="result-body stagger">
+        <div class="result-body">
           <div class="result-top">
             <div>
               <h2>{{ r.ticker }} {{ phrase(r) }}</h2>
@@ -170,7 +170,7 @@
                 As of {{ pretty(r.asOf) }}. {{ r.tradingDays }} trading days to {{ pretty(r.effectiveDate) }}.
               </p>
             </div>
-            <span class="badge" [class.live]="r.origin === 'live'">{{ originLabel(r.origin, r.provider) }}</span>
+            <span class="origin" [class.live]="r.origin === 'live'">{{ originLabel(r.origin, r.provider) }}</span>
           </div>
 
           <p class="advice">Educational tool. Not financial advice.</p>
@@ -246,8 +246,8 @@
       } @else {
         <div class="empty">
           <p class="eyebrow">Readout</p>
-          <h2>The readout sits here.</h2>
-          <p>Calculate to see close-beyond and touch, the 1 sigma range, and the terminal distribution.</p>
+          <h2>Nothing calculated yet.</h2>
+          <p>Close beyond, touch, the 1 sigma range, and the terminal distribution show up here.</p>
           <div class="presets">
             @for (preset of presets; track preset.label) {
               <button type="button" (click)="applyPreset(preset)">{{ preset.label }}</button>

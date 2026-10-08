@@ -48,10 +48,10 @@ Phone width is in the same folder: `home-light-phone.png`, `home-dark-phone.png`
 - Query history stored next to the price cache
 - Live Yahoo Finance data, with Stooq as a fallback, and a server-side cache
 - Shipped sample history for 15 tickers so the app still runs offline
-- A badge that says whether the result used live or cached data
+- A label that says whether the result used live or cached data
 - Light and dark mode. The choice is remembered. With no saved choice, the app follows the system theme.
 - Phone and desktop layouts
-- Count-up on the probabilities, chart draw-in, staggered questions, route transitions, and skeleton loaders. `prefers-reduced-motion` turns the motion off.
+- A short fade when a page or result appears. `prefers-reduced-motion` turns the motion off.
 
 ## Stack
 
