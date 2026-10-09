@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /apps/jev-odds/
+RewriteRule ^api/ - [L]
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /apps/jev-odds/index.html [L]

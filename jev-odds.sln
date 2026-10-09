@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F2493906-8812-4F71-9ADA-90BA9B7FD68C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JevOdds.Api", "src\JevOdds.Api\JevOdds.Api.csproj", "{F4030F6D-B6F2-41FA-945A-0768D46DB97F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A0273D2F-D182-4911-A9C8-29D6E31E6CDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JevOdds.Tests", "tests\JevOdds.Tests\JevOdds.Tests.csproj", "{6982F67D-DB4B-4427-BB19-00AF8C37B83A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4030F6D-B6F2-41FA-945A-0768D46DB97F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4030F6D-B6F2-41FA-945A-0768D46DB97F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4030F6D-B6F2-41FA-945A-0768D46DB97F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4030F6D-B6F2-41FA-945A-0768D46DB97F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6982F67D-DB4B-4427-BB19-00AF8C37B83A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6982F67D-DB4B-4427-BB19-00AF8C37B83A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6982F67D-DB4B-4427-BB19-00AF8C37B83A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6982F67D-DB4B-4427-BB19-00AF8C37B83A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F4030F6D-B6F2-41FA-945A-0768D46DB97F} = {F2493906-8812-4F71-9ADA-90BA9B7FD68C}
+		{6982F67D-DB4B-4427-BB19-00AF8C37B83A} = {A0273D2F-D182-4911-A9C8-29D6E31E6CDC}
+	EndGlobalSection
+EndGlobal
